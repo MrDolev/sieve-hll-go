@@ -6,6 +6,7 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/mrdolev/sieve-go/internal/server"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -34,6 +35,12 @@ func main() {
 		log.Fatalf("error %s", err)
 	}
 	log.Printf("query result: %s", result)
+
+	serverPort := getEnvInt("SERVER_PORT", 8080)
+	serverPath := getEnv("SERVER_PATH", "/")
+
+	serverMux := server.NewServerMux(serverPort, serverPath)
+	serverMux.Serve()
 }
 
 func getEnv(key, fallback string) string {

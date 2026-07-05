@@ -13,15 +13,24 @@ COMPOSE := docker compose
 ENV_FILE    := .env
 ENV_EXAMPLE := .env.example
 
-# Load config into Make's own variables: .env.example first (defaults),
-# then .env on top if it exists (real overrides win). Same precedence
-# used by the Compose files' env_file layering below.
--include $(ENV_EXAMPLE)
--include $(ENV_FILE)
-export
+# Loads config for recipes that run the Go binary directly (not via
+# docker compose, which handles its own env_file loading natively).
+#
+# This uses real shell sourcing, NOT `make -include`. `-include` does
+# naive textual parsing and will NOT strip quotes -- a line like
+# REDIS_ADDR="redis:6379" in your .env ends up as the literal value
+# `"redis:6379"` (quotes included), which breaks hostname resolution.
+# Sourcing with `.` parses the file the way a real shell would.
+#
+# Precedence: .env.example provides defaults, .env overlays on top
+# (sourced second, so it wins on any key present in both).
+LOAD_ENV = set -a; \
+	[ -f $(ENV_EXAMPLE) ] && . ./$(ENV_EXAMPLE); \
+	[ -f $(ENV_FILE) ] && . ./$(ENV_FILE); \
+	set +a;
 
 .PHONY: all build bin test lint security validate clean run tools env \
-        local-up local-down local-logs local-run local-test \
+        local-up local-down local-logs local-run local-test local-load-test \
         integration-up integration-down integration-test integration-test-container \
         dev-build dev-up dev-down dev-logs \
         stage-build stage-up stage-down stage-logs \
@@ -86,9 +95,9 @@ validate: lint security test
 clean:
 	rm -rf $(BIN_DIR)
 
-## Alias: build the binary and run it (uses whatever REDIS_ADDR is in .env/.env.example)
+## Alias: build the binary and run it (loads .env/.env.example via real shell sourcing)
 run: env bin
-	./$(BIN_DIR)/$(APP_NAME)
+	@$(LOAD_ENV) ./$(BIN_DIR)/$(APP_NAME)
 
 ## ================= LOCAL: Redis only, compile/run Go directly =================
 ## Use this while writing/testing code -- no app container, fastest loop.
@@ -108,12 +117,18 @@ local-down:
 local-logs:
 	$(COMPOSE) -p $(LOCAL_PROJECT) -f $(LOCAL_COMPOSE) logs -f
 
-## Build the binary and run it against local Redis
+## Build the binary and run it against local Redis (loads .env/.env.example)
 local-run: local-up bin
-	./$(BIN_DIR)/$(APP_NAME)
+	@$(LOAD_ENV) ./$(BIN_DIR)/$(APP_NAME)
 
 ## Unit tests only, no containers required
 local-test: test
+
+## Simulate curl clients against the locally-running (non-containerized)
+## binary from `local-run`. No Docker involved on the client side either --
+## just curl loops on the host. Run `make local-run` in another terminal first.
+local-load-test:
+	./scripts/load_test.sh http://localhost:8081
 
 ## ================= INTEGRATION: Redis + go test -tags=integration =============
 
@@ -170,7 +185,7 @@ dev-logs:
 ## it can run alongside dev-up without colliding. Adds an optional .env.stage
 ## layer on top of .env.example -> .env for stage-only overrides.
 
-STAGE_COMPOSE := -f docker-compose.yml -f docker-compose.stage.yml
+STAGE_COMPOSE := -f docker-compose.yml -f docker-compose.stage.yaml
 STAGE_PROJECT := sieve-stage
 
 ## Build the app image for stage (same Dockerfile as dev)
@@ -189,9 +204,12 @@ stage-down:
 stage-logs:
 	$(COMPOSE) -p $(STAGE_PROJECT) $(STAGE_COMPOSE) logs -f
 
-## ---- Multi-client emulation (targets whatever stack is up, default dev) ------
+## ---- Multi-client emulation ---------------------------------------------
 
-## Quick host-based emulation: concurrent curl calls, spoofed X-Forwarded-For
+## Quick host-based emulation: concurrent curl calls, spoofed X-Forwarded-For.
+## Works against ANY running instance, containerized or not -- pass the URL:
+##   ./scripts/load_test.sh http://localhost:8080   (dev container or local-run)
+##   ./scripts/load_test.sh http://localhost:8081   (stage container)
 load-test:
 	./scripts/load_test.sh
 
