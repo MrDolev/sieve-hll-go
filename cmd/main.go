@@ -2,11 +2,14 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
+	"net/http"
 	"os"
 	"strconv"
 
-	"github.com/mrdolev/sieve-go/internal/server"
+	ip_stats "github.com/mrdolev/sieve-go/internal/ip_stats"
+	router "github.com/mrdolev/sieve-go/internal/router"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -36,11 +39,26 @@ func main() {
 	}
 	log.Printf("query result: %s", result)
 
-	serverPort := getEnvInt("SERVER_PORT", 8080)
-	serverPath := getEnv("SERVER_PATH", "/")
+	var ipStatsRepo ip_stats.IPStatsRepoI = ip_stats.NewIPStatRepo(redisClient)
+	var ipStatsService ip_stats.IPStatsServiceI = ip_stats.NewIPStatsService(ipStatsRepo)
+	var handler ip_stats.IPStatsHandlerI = ip_stats.NewHandler(ipStatsService)
 
-	serverMux := server.NewServerMux(serverPort, serverPath)
-	serverMux.Serve()
+	serverPort := getEnvInt("SERVER_PORT", 8080)
+
+	mux := http.NewServeMux()
+
+	r := router.NewRouter(handler, mux)
+	r.GetCounter("/")
+
+	server := &http.Server{
+		Addr:    fmt.Sprintf(":%d", serverPort),
+		Handler: mux,
+	}
+
+	log.Println("server is started")
+	if err := server.ListenAndServe(); err != nil {
+		log.Fatalln("error to start web server")
+	}
 }
 
 func getEnv(key, fallback string) string {
