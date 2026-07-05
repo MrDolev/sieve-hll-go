@@ -80,3 +80,6 @@ go.work
 # Ignore all local history of files
 .history
 .ionide
+
+### Binary file ###
+bin/sieve-go
