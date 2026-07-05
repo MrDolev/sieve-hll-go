@@ -48,7 +48,7 @@ func main() {
 	mux := http.NewServeMux()
 
 	r := router.NewRouter(handler, mux)
-	r.GetCounter("/")
+	r.UpSert("/")
 
 	server := &http.Server{
 		Addr:    fmt.Sprintf(":%d", serverPort),
