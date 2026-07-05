@@ -1,0 +1,42 @@
+# STAGE environment overlay. Used together with docker-compose.yml:
+#   docker compose -p sieve-stage -f docker-compose.yml -f docker-compose.stage.yml up -d --build
+#
+# Fully isolated from DEV: different container names, published ports,
+# and network, so `make dev-up` and `make stage-up` can run at the same
+# time without colliding. Env layering adds an optional .env.stage on
+# top of .env.example -> .env, for stage-only overrides (e.g. IMAGE_TAG).
+services:
+  redis:
+    container_name: sieve-redis-stage
+    env_file:
+      - path: .env.example
+        required: true
+      - path: .env
+        required: false
+      - path: .env.stage
+        required: false
+    ports:
+      - "6381:6379"
+    networks:
+      - sieve-stage-net
+
+  app:
+    container_name: sieve-app-stage
+    env_file:
+      - path: .env.example
+        required: true
+      - path: .env
+        required: false
+      - path: .env.stage
+        required: false
+    ports:
+      - "8081:8080"
+    networks:
+      - sieve-stage-net
+
+networks:
+  sieve-net:
+    driver: bridge
+  sieve-stage-net:
+    name: sieve-stage-net
+    driver: bridge
