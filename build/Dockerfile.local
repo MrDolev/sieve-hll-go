@@ -1,0 +1,24 @@
+# syntax=docker/dockerfile:1
+#
+# Fast path: reuses a binary you already built with `make bin`.
+# Build context must be the repo root, e.g.:
+#   make bin
+#   docker build -f build/Dockerfile.local -t sieve-go:local .
+#
+# Use build/Dockerfile instead if you want the image to compile from
+# source (recommended for CI / anything you'll ship).
+
+FROM alpine:3.20
+
+RUN apk add --no-cache ca-certificates && \
+    adduser -D -u 10001 appuser
+
+WORKDIR /app
+COPY bin/sieve-go /app/sieve-go
+
+USER appuser
+
+ENV HTTP_ADDR=:8080
+EXPOSE 8080
+
+ENTRYPOINT ["/app/sieve-go"]
