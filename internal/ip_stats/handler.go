@@ -22,21 +22,11 @@ func NewHandler(service IPStatsServiceI) *IPStatsHandler {
 }
 
 func (handler *IPStatsHandler) UpSert(responseWriter http.ResponseWriter, request *http.Request) {
-	ipFromAddress, err := utils.GetIPv4fromRequestRemoteAddr(request)
-	if err != nil {
-		log.Printf("%s", err.Error())
+	ipFromAddress := utils.GetIPAddress(request)
+	if ipFromAddress == "" {
+		log.Printf("could not retrieve data ip \n")
+		return
 	}
-	ipFromHeader, err := utils.GetIPv4FromRequestHeader(request)
-	if err != nil {
-		log.Printf("error to retrieve ip from request header")
-	}
-	if ipFromAddress != "" {
-		responseWriter.Header().Add("From-Address", ipFromAddress)
-		log.Println("fromAddress", ipFromAddress)
-	}
-	if ipFromHeader != "" {
-		responseWriter.Header().Add("From-Header", ipFromHeader)
-		log.Println("fromHeader", ipFromHeader)
-	}
+	log.Println("ip address", ipFromAddress)
 	handler.service.UpSert()
 }
