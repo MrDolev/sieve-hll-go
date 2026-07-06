@@ -2,6 +2,7 @@ package repo
 
 type IPStatsServiceI interface {
 	UpSert()
+	Collect()
 }
 
 type IPStatsService struct {
@@ -17,4 +18,8 @@ func NewIPStatsService(repo IPStatsRepoI) *IPStatsService {
 func (service *IPStatsService) UpSert() {
 	service.repo.UpSert()
 	return
+}
+
+func (service *IPStatsService) Collect() {
+
 }
