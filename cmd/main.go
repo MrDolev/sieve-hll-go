@@ -7,9 +7,12 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"time"
 
+	"github.com/mrdolev/sieve-go/internal/collector"
 	ip_stats "github.com/mrdolev/sieve-go/internal/ip_stats"
 	router "github.com/mrdolev/sieve-go/internal/router"
+	"github.com/mrdolev/sieve-go/internal/storage"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -39,8 +42,18 @@ func main() {
 	}
 	log.Printf("query result: %s", result)
 
-	var ipStatsRepo ip_stats.IPStatsRepoI = ip_stats.NewIPStatRepo(redisClient)
-	var ipStatsService ip_stats.IPStatsServiceI = ip_stats.NewIPStatsService(ipStatsRepo)
+	sharedStorage := storage.NewRedisClient(redisClient)
+	ipStatsRepo := ip_stats.NewIPStatRepo(sharedStorage)
+
+	var collector collector.CollectorI = collector.NewCollector(
+		ipStatsRepo,
+		1000,
+		5*time.Second,
+	)
+
+	defer collector.Close()
+
+	var ipStatsService ip_stats.IPStatsServiceI = ip_stats.NewIPStatsService(ipStatsRepo, collector)
 	var handler ip_stats.IPStatsHandlerI = ip_stats.NewHandler(ipStatsService)
 
 	serverPort := getEnvInt("SERVER_PORT", 8080)
@@ -48,7 +61,7 @@ func main() {
 	mux := http.NewServeMux()
 
 	r := router.NewRouter(handler, mux)
-	r.UpSert("/")
+	r.Collect("/")
 
 	server := &http.Server{
 		Addr:    fmt.Sprintf(":%d", serverPort),

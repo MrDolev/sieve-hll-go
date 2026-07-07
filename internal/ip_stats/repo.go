@@ -1,21 +1,31 @@
 package repo
 
-import "github.com/redis/go-redis/v9"
+import (
+	"context"
+	"time"
 
-type IPStatsRepoI interface {
-	UpSert()
-}
+	"github.com/mrdolev/sieve-go/internal/storage"
+)
 
 type IPStatsRepo struct {
-	redisClient *redis.Client
+	storageClient *storage.RedisClient
 }
 
-func NewIPStatRepo(redisClient *redis.Client) *IPStatsRepo {
+func NewIPStatRepo(storageClient *storage.RedisClient) *IPStatsRepo {
 	return &IPStatsRepo{
-		redisClient: redisClient,
+		storageClient: storageClient,
 	}
 }
 
-func (repo *IPStatsRepo) UpSert() {
-	return
+func (repo *IPStatsRepo) PFAddBatch(ctx context.Context, ips []string) error {
+	args := make([]interface{}, len(ips))
+
+	for index, value := range ips {
+		args[index] = value
+	}
+
+	key := "client requests" + time.Now().Format("2006-01-02")
+
+	return repo.storageClient.Client().PFAdd(ctx, key, args...).Err()
+
 }

@@ -18,6 +18,6 @@ func NewRouter(handler repoIPStats.IPStatsHandlerI, server *http.ServeMux) *Rout
 	}
 }
 
-func (r *Router) UpSert(path string) {
-	r.serverMux.HandleFunc(path, r.handler.UpSert)
+func (r *Router) Collect(path string) {
+	r.serverMux.HandleFunc(path, r.handler.Collect)
 }
