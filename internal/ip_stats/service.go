@@ -2,6 +2,7 @@ package repo
 
 import (
 	"context"
+	"log"
 
 	"github.com/mrdolev/sieve-go/internal/collector"
 	"github.com/mrdolev/sieve-go/internal/storage"
@@ -24,5 +25,6 @@ func NewIPStatsService(repo storage.Repository, collector collector.CollectorI) 
 }
 
 func (service *IPStatsService) Collect(ctx context.Context, ip string) {
+	log.Printf("start to collect from service - %s \n", ip)
 	service.collector.Enqueue(ip)
 }

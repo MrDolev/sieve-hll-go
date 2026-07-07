@@ -22,13 +22,17 @@ type Collector struct {
 }
 
 func NewCollector(repo storage.Repository, batchSize int, interval time.Duration) *Collector {
-	return &Collector{
+	collect := &Collector{
 		repo:      repo,
 		bufferCh:  make(chan string, 10000),
 		batchSize: batchSize,
 		interval:  interval,
 		doneCh:    make(chan struct{}),
 	}
+
+	go collect.run()
+
+	return collect
 }
 
 func (collector *Collector) Enqueue(ip string) {
@@ -70,7 +74,8 @@ func (collector *Collector) flush(batch []string) {
 	if err := collector.repo.PFAddBatch(context.Background(), batch); err != nil {
 		log.Printf("error to store information %s", err.Error())
 		return
+	} else {
+		log.Printf("the information are stored correctly %d", len(batch))
+		return
 	}
-	log.Printf("the information are stored correctly %d", len(batch))
-	return
 }
