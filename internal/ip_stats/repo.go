@@ -1,4 +1,4 @@
-package repo
+package ip_stats
 
 import (
 	"context"
