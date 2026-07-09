@@ -54,6 +54,8 @@ func (collector *Collector) run() {
 			batch = append(batch, ip)
 			if len(batch) >= collector.batchSize {
 				collector.flush(batch)
+				// reset
+				batch = batch[:0]
 			}
 		case <-ticker.C:
 			if len(batch) > 0 {
@@ -74,8 +76,6 @@ func (collector *Collector) flush(batch []string) {
 	if err := collector.repo.PFAddBatch(context.Background(), batch); err != nil {
 		log.Printf("error to store information %s", err.Error())
 		return
-	} else {
-		log.Printf("the information are stored correctly %d", len(batch))
-		return
 	}
+	log.Printf("the information are stored correctly %d", len(batch))
 }
