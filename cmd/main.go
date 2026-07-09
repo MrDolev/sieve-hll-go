@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"log"
 	"net/http"
@@ -29,21 +28,8 @@ func main() {
 		Protocol: proto,
 	})
 
-	ctx := context.Background()
-
-	err := redisClient.Set(ctx, "foo", "bar", 0).Err()
-	if err != nil {
-		log.Fatalf("panic to set %s", err)
-	}
-
-	result, err := redisClient.Get(ctx, "foo").Result()
-	if err != nil {
-		log.Fatalf("error %s", err)
-	}
-	log.Printf("query result: %s", result)
-
 	sharedStorage := storage.NewRedisClient(redisClient)
-	ipStatsRepo := ip_stats.NewIPStatRepo(sharedStorage)
+	ipStatsRepo := ip_stats.NewIPStatsRepo(sharedStorage)
 
 	var collector collector.CollectorI = collector.NewCollector(
 		ipStatsRepo,
@@ -53,7 +39,7 @@ func main() {
 
 	defer collector.Close()
 
-	var ipStatsService ip_stats.IPStatsServiceI = ip_stats.NewIPStatsService(ipStatsRepo, collector)
+	var ipStatsService ip_stats.IPStatsServiceI = ip_stats.NewIPStatsService(collector)
 	var handler ip_stats.IPStatsHandlerI = ip_stats.NewHandler(ipStatsService)
 
 	serverPort := getEnvInt("SERVER_PORT", 8080)

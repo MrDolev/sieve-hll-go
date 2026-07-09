@@ -5,7 +5,6 @@ import (
 	"log"
 
 	"github.com/mrdolev/sieve-go/internal/collector"
-	"github.com/mrdolev/sieve-go/internal/storage"
 )
 
 type IPStatsServiceI interface {
@@ -13,13 +12,11 @@ type IPStatsServiceI interface {
 }
 
 type IPStatsService struct {
-	repo      storage.Repository
 	collector collector.CollectorI
 }
 
-func NewIPStatsService(repo storage.Repository, collector collector.CollectorI) *IPStatsService {
+func NewIPStatsService(collector collector.CollectorI) *IPStatsService {
 	return &IPStatsService{
-		repo:      repo,
 		collector: collector,
 	}
 }
