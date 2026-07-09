@@ -1,12 +1,17 @@
 package main
 
 import (
-	"context"
+	"fmt"
 	"log"
+	"net/http"
 	"os"
 	"strconv"
+	"time"
 
-	"github.com/mrdolev/sieve-go/internal/server"
+	"github.com/mrdolev/sieve-go/internal/collector"
+	ip_stats "github.com/mrdolev/sieve-go/internal/ip_stats"
+	router "github.com/mrdolev/sieve-go/internal/router"
+	"github.com/mrdolev/sieve-go/internal/storage"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -23,24 +28,36 @@ func main() {
 		Protocol: proto,
 	})
 
-	ctx := context.Background()
+	sharedStorage := storage.NewRedisClient(redisClient)
+	ipStatsRepo := ip_stats.NewIPStatsRepo(sharedStorage)
 
-	err := redisClient.Set(ctx, "foo", "bar", 0).Err()
-	if err != nil {
-		log.Fatalf("panic to set %s", err)
-	}
+	var collector collector.CollectorI = collector.NewCollector(
+		ipStatsRepo,
+		1000,
+		5*time.Second,
+	)
 
-	result, err := redisClient.Get(ctx, "foo").Result()
-	if err != nil {
-		log.Fatalf("error %s", err)
-	}
-	log.Printf("query result: %s", result)
+	defer collector.Close()
+
+	var ipStatsService ip_stats.IPStatsServiceI = ip_stats.NewIPStatsService(collector)
+	var handler ip_stats.IPStatsHandlerI = ip_stats.NewHandler(ipStatsService)
 
 	serverPort := getEnvInt("SERVER_PORT", 8080)
-	serverPath := getEnv("SERVER_PATH", "/")
 
-	serverMux := server.NewServerMux(serverPort, serverPath)
-	serverMux.Serve()
+	mux := http.NewServeMux()
+
+	r := router.NewRouter(handler, mux)
+	r.Collect("/")
+
+	server := &http.Server{
+		Addr:    fmt.Sprintf(":%d", serverPort),
+		Handler: mux,
+	}
+
+	log.Println("server is started")
+	if err := server.ListenAndServe(); err != nil {
+		log.Fatalln("error to start web server")
+	}
 }
 
 func getEnv(key, fallback string) string {

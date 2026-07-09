@@ -124,6 +124,10 @@ local-run: local-up bin
 ## Unit tests only, no containers required
 local-test: test
 
+## Redis cli access
+local-redis-cli:
+	$(COMPOSE) -p $(LOCAL_PROJECT) exec -it redis redis-cli
+
 ## Simulate curl clients against the locally-running (non-containerized)
 ## binary from `local-run`. No Docker involved on the client side either --
 ## just curl loops on the host. Run `make local-run` in another terminal first.
