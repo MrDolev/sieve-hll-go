@@ -8,6 +8,8 @@ GOFLAGS       :=
 GOLANGCI_LINT := $(shell go env GOPATH)/bin/golangci-lint
 GOSEC         := $(shell go env GOPATH)/bin/gosec
 
+RACE_FLAGS	  := -race
+
 COMPOSE := docker compose
 
 ENV_FILE    := .env
@@ -29,7 +31,7 @@ LOAD_ENV = set -a; \
 	[ -f $(ENV_FILE) ] && . ./$(ENV_FILE); \
 	set +a;
 
-.PHONY: all build bin test lint security validate clean run tools env \
+.PHONY: all build bin test test-race lint security validate clean run tools env \
         local-up local-down local-logs local-run local-test local-load-test \
         integration-up integration-down integration-test integration-test-container \
         dev-build dev-up dev-down dev-logs \
@@ -65,6 +67,9 @@ bin:
 ## Run unit tests (no external dependencies required)
 test:
 	$(GO) test $(GOFLAGS) -v ./...
+
+test-race:
+	$(GO) test $(RACE_FLAGS) -v ./...
 
 ## Run static analysis / linting (golangci-lint)
 lint:
