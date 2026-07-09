@@ -43,11 +43,12 @@ func main() {
 	var handler ip_stats.IPStatsHandlerI = ip_stats.NewHandler(ipStatsService)
 
 	serverPort := getEnvInt("SERVER_PORT", 8080)
+	serverPath := getEnv("SERVER_PATH", "/")
 
 	mux := http.NewServeMux()
 
 	r := router.NewRouter(handler, mux)
-	r.Collect("/")
+	r.Collect(serverPath)
 
 	server := &http.Server{
 		Addr:    fmt.Sprintf(":%d", serverPort),
