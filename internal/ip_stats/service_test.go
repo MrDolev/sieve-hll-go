@@ -18,7 +18,7 @@ func TestIPStatsServiceCollect(t *testing.T) {
 	collectorMock := mocks.NewMockCollectorI(controller)
 	collectorMock.EXPECT().Enqueue(serviceIP).Times(1)
 
-	service := ipstats.NewIPStatsService(nil, collectorMock)
+	service := ipstats.NewIPStatsService(collectorMock)
 	if service == nil {
 		t.Fatal("expected service instance")
 	}
