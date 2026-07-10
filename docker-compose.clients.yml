@@ -14,7 +14,7 @@ services:
     build:
       context: ./scripts/client
     environment:
-      TARGET_URL: http://app:8080
+      TARGET_URL: http://app:8081
       N_MIN: "10"
       N_MAX: "100"
       REQUEST_COUNT: "30"
@@ -26,7 +26,7 @@ services:
     build:
       context: ./scripts/client
     environment:
-      TARGET_URL: http://app:8080
+      TARGET_URL: http://app:8081
       N_MIN: "500"
       N_MAX: "2000"
       REQUEST_COUNT: "15"
@@ -38,7 +38,7 @@ services:
     build:
       context: ./scripts/client
     environment:
-      TARGET_URL: http://app:8080
+      TARGET_URL: http://app:8081
       N_MIN: "10"
       N_MAX: "100"
       REQUEST_COUNT: "50"
