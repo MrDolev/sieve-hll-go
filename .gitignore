@@ -82,6 +82,9 @@ go.work
 .history
 .ionide
 
+### Zed ###
+.zed/*
+
 ### Binary file ###
 bin/sieve-go
 
