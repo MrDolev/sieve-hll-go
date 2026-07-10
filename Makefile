@@ -34,8 +34,8 @@ LOAD_ENV = set -a; \
 .PHONY: all build bin test test-race lint security validate clean run tools env \
         local-up local-down local-logs local-run local-test local-load-test \
         integration-up integration-down integration-test integration-test-container \
-        dev-build dev-up dev-down dev-logs \
-        stage-build stage-up stage-down stage-logs \
+        dev-build dev-up dev-down dev-logs compose-build compose-up compose-down compose-logs compose-redis-cli compose-load-test compose-deploy \
+        stage-build stage-up stage-down stage-logs stage-redis-cli stage-load-test \
         clients-up clients-down load-test
 
 all: validate build
@@ -181,6 +181,33 @@ dev-build:
 dev-up: env
 	$(COMPOSE) -p $(DEV_PROJECT) -f $(DEV_COMPOSE) up -d --build
 
+## Build the app image for local Docker Compose deployment
+compose-build:
+	./build/build.sh source
+
+## Build and deploy the local Docker Compose stack
+compose-up: env
+	$(COMPOSE) -p $(DEV_PROJECT) -f $(DEV_COMPOSE) up -d --build
+
+## Stop the local Docker Compose stack
+compose-down:
+	$(COMPOSE) -p $(DEV_PROJECT) -f $(DEV_COMPOSE) down -v
+
+## Tail the local Docker Compose stack logs
+compose-logs:
+	$(COMPOSE) -p $(DEV_PROJECT) -f $(DEV_COMPOSE) logs -f redis app
+
+## Run a Redis CLI inside the local Docker Compose stack
+compose-redis-cli:
+	$(COMPOSE) -p $(DEV_PROJECT) -f $(DEV_COMPOSE) exec -it redis redis-cli
+
+## Run a load test against the local Docker Compose stack
+compose-load-test:
+	./scripts/load_test.sh http://localhost:8081
+
+## Alias for compose-based deployment
+compose-deploy: compose-up
+
 ## Stop the dev stack
 dev-down:
 	$(COMPOSE) -p $(DEV_PROJECT) -f $(DEV_COMPOSE) down -v
@@ -213,14 +240,22 @@ stage-down:
 stage-logs:
 	$(COMPOSE) -p $(STAGE_PROJECT) $(STAGE_COMPOSE) logs -f
 
+## Run a Redis CLI inside the stage Docker Compose stack
+stage-redis-cli:
+	$(COMPOSE) -p $(STAGE_PROJECT) $(STAGE_COMPOSE) exec -it redis redis-cli
+
+## Run a load test against the stage Docker Compose stack
+stage-load-test:
+	./scripts/load_test.sh http://localhost:8082
+
 ## ---- Multi-client emulation ---------------------------------------------
 
 ## Quick host-based emulation: concurrent curl calls, spoofed X-Forwarded-For.
 ## Works against ANY running instance, containerized or not -- pass the URL:
-##   ./scripts/load_test.sh http://localhost:8080   (dev container or local-run)
-##   ./scripts/load_test.sh http://localhost:8081   (stage container)
+##   ./scripts/load_test.sh http://localhost:8081   (dev container or local-run)
+##   ./scripts/load_test.sh http://localhost:8082   (stage container)
 load-test:
-	./scripts/load_test.sh
+	./scripts/load_test.sh http://localhost:8081
 
 ## Real multi-container clients with distinct Docker network IPs
 ## (requires `make dev-up` first)

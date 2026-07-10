@@ -14,16 +14,20 @@
 #
 # Examples:
 #   ./scripts/load_test.sh
-#   ./scripts/load_test.sh http://localhost:8080 20 10 500
+#   ./scripts/load_test.sh http://localhost:8081 20 10 500
 
 set -euo pipefail
 
-BASE_URL="${1:-http://localhost:8080}"
+BASE_URL="${1:-http://localhost:8081}"
 CONCURRENCY="${2:-10}"
 N_MIN="${3:-10}"
 N_MAX="${4:-200}"
 
-echo "Target:      ${BASE_URL}/sieve"
+STATUS_FILE="$(mktemp)"
+trap 'rm -f "$STATUS_FILE"' EXIT
+export STATUS_FILE
+
+echo "Target:      ${BASE_URL}"
 echo "Concurrency: ${CONCURRENCY} simulated clients"
 echo "n range:     ${N_MIN}-${N_MAX} (each client picks its own value)"
 echo
@@ -36,11 +40,14 @@ run_client() {
   fake_ip="10.$(( RANDOM % 256 )).$(( RANDOM % 256 )).$(( RANDOM % 256 ))"
 
   local result
-  result=$(curl -s -o /dev/null -w "%{http_code} %{time_total}" \
-    -H "X-Forwarded-For: ${fake_ip}" \
-    "${BASE_URL}/sieve?n=${n}")
+  if ! result=$(curl -s -o /dev/null -w "%{http_code} %{time_total}" \
+      -H "X-Forwarded-For: ${fake_ip}" \
+      "${BASE_URL}?n=${n}"); then
+    result="ERROR:$?"
+    printf '1' > "$STATUS_FILE"
+  fi
 
-  printf "client %-3s ip=%-15s n=%-4s -> HTTP %s (%ss)\n" "$id" "$fake_ip" "$n" "$result"
+  printf "client %-3s ip=%-15s n=%-4s -> %s\n" "$id" "$fake_ip" "$n" "$result"
 }
 
 export -f run_client
@@ -50,4 +57,8 @@ seq 1 "${CONCURRENCY}" | xargs -P "${CONCURRENCY}" -I{} bash -c 'run_client "$@"
 
 echo
 echo "Health check:"
-curl -s -o /dev/null -w "HTTP %{http_code}\n" "${BASE_URL}/healthz"
+curl -s -o /dev/null -w "HTTP %{http_code}\n" "${BASE_URL}"
+
+if [ -s "$STATUS_FILE" ]; then
+  exit 1
+fi

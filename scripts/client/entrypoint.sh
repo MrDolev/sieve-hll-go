@@ -7,7 +7,7 @@
 
 set -euo pipefail
 
-TARGET_URL="${TARGET_URL:-http://app:8080}"
+TARGET_URL="${TARGET_URL:-http://app:8081}"
 N_MIN="${N_MIN:-10}"
 N_MAX="${N_MAX:-100}"
 REQUEST_COUNT="${REQUEST_COUNT:-20}"
