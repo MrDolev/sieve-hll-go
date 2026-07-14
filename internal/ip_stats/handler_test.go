@@ -5,9 +5,9 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	ipstats "github.com/mrdolev/sieve-go/internal/ip_stats"
-	"github.com/mrdolev/sieve-go/mocks"
-	"github.com/mrdolev/sieve-go/utils"
+	ipstats "github.com/mrdolev/sieve-hll-go/internal/ip_stats"
+	"github.com/mrdolev/sieve-hll-go/mocks"
+	"github.com/mrdolev/sieve-hll-go/utils"
 	"go.uber.org/mock/gomock"
 )
 

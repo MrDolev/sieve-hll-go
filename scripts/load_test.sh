@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Emulates multiple clients hitting the sieve HTTP API concurrently.
+# Emulates multiple clients hitting the HTTP API concurrently.
 # Each "client" sends a different request (varying n) and, optionally,
 # a spoofed X-Forwarded-For header so app-side logs show distinct IPs.
 #

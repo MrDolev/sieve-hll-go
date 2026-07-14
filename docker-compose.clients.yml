@@ -1,5 +1,5 @@
 # Real multi-client emulation: each service below is its own container on
-# the "sieve-net" network, so each gets a genuinely distinct Docker bridge
+# the "sieve-hll-go-net" network, so each gets a genuinely distinct Docker bridge
 # IP (not spoofed). Requires the app stack to already be up:
 #
 #   make docker-up
@@ -20,7 +20,7 @@ services:
       REQUEST_COUNT: "30"
       DELAY_MS: "200"
     networks:
-      - sieve-net
+      - sieve-hll-go-net
 
   client-2:
     build:
@@ -32,7 +32,7 @@ services:
       REQUEST_COUNT: "15"
       DELAY_MS: "500"
     networks:
-      - sieve-net
+      - sieve-hll-go-net
 
   client-3:
     build:
@@ -44,9 +44,9 @@ services:
       REQUEST_COUNT: "50"
       DELAY_MS: "50"
     networks:
-      - sieve-net
+      - sieve-hll-go-net
 
 networks:
-  sieve-net:
+  sieve-hll-go-net:
     external: true
-    name: sieve-net
+    name: sieve-hll-go-net

@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/mrdolev/sieve-go/internal/storage"
+	"github.com/mrdolev/sieve-hll-go/internal/storage"
 )
 
 type IPStatsRepo struct {

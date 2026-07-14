@@ -4,7 +4,7 @@
 services:
   redis:
     image: redis:7-alpine
-    container_name: sieve-redis
+    container_name: sieve-hll-go-redis
     env_file:
       - path: .env.example
         required: true
@@ -33,14 +33,14 @@ services:
       timeout: 3s
       retries: 5
     networks:
-      - sieve-net
+      - sieve-hll-go-net
 
   app:
-    image: ${IMAGE_NAME:-sieve-go}:${IMAGE_TAG:-latest}
+    image: ${IMAGE_NAME:-sieve-hll-go}:${IMAGE_TAG:-latest}
     build:
       context: .
       dockerfile: build/Dockerfile
-    container_name: sieve-app
+    container_name: sieve-hll-go-app
     ports:
       - "8081:8081"
     env_file:
@@ -52,9 +52,9 @@ services:
       redis:
         condition: service_healthy
     networks:
-      - sieve-net
+      - sieve-hll-go-net
 
 networks:
-  sieve-net:
-    name: sieve-net
+  sieve-hll-go-net:
+    name: sieve-hll-go-net
     driver: bridge

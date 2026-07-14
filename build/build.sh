@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Build the sieve-go Docker image.
+# Build the sieve-hll-go Docker image.
 #
 # Usage:
 #   ./build/build.sh source   # compile from source inside Docker (default, CI-safe)
@@ -9,7 +9,7 @@
 set -euo pipefail
 
 MODE="${1:-source}"
-IMAGE_NAME="${IMAGE_NAME:-sieve-go}"
+IMAGE_NAME="${IMAGE_NAME:-sieve-hll-go}"
 IMAGE_TAG="${IMAGE_TAG:-latest}"
 
 # Run from repo root regardless of where the script is invoked from.

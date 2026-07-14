@@ -5,7 +5,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/mrdolev/sieve-go/internal/storage"
+	"github.com/mrdolev/sieve-hll-go/internal/storage"
 )
 
 type CollectorI interface {
@@ -64,10 +64,21 @@ func (collector *Collector) run() {
 				batch = batch[:0]
 			}
 		case <-collector.doneCh:
-			if len(batch) > 0 {
-				collector.flush(batch)
+			for {
+				select {
+				case ip := <-collector.bufferCh:
+					batch = append(batch, ip)
+					if len(batch) >= collector.batchSize {
+						collector.flush(batch)
+						batch = batch[:0]
+					}
+				default:
+					if len(batch) > 0 {
+						collector.flush(batch)
+					}
+					return
+				}
 			}
-			return
 		}
 	}
 }

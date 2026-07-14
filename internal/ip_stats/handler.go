@@ -4,7 +4,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/mrdolev/sieve-go/utils"
+	"github.com/mrdolev/sieve-hll-go/utils"
 )
 
 type IPStatsHandlerI interface {

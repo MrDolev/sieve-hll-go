@@ -4,7 +4,7 @@ import (
 	"context"
 	"log"
 
-	"github.com/mrdolev/sieve-go/internal/collector"
+	"github.com/mrdolev/sieve-hll-go/internal/collector"
 )
 
 type IPStatsServiceI interface {

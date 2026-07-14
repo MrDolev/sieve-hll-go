@@ -1,4 +1,4 @@
-APP_NAME := sieve-go
+APP_NAME := sieve-hll-go
 BIN_DIR  := bin
 CMD_DIR  := ./cmd
 MAIN_PKG := $(CMD_DIR)/main.go
@@ -108,7 +108,7 @@ run: env bin
 ## Use this while writing/testing code -- no app container, fastest loop.
 
 LOCAL_COMPOSE := docker-compose.redis.yaml
-LOCAL_PROJECT := sieve-local
+LOCAL_PROJECT := sieve-hll-go-local
 
 ## Start local Redis (reads .env.example, overlaid by .env if present)
 local-up: env
@@ -142,7 +142,7 @@ local-load-test:
 ## ================= INTEGRATION: Redis + go test -tags=integration =============
 
 INTEGRATION_COMPOSE := docker-compose.test.yml
-INTEGRATION_PROJECT := sieve-integration
+INTEGRATION_PROJECT := sieve-hll-go-integration
 
 ## Start Redis for integration tests
 integration-up:
@@ -171,7 +171,7 @@ integration-test-container:
 ## ================= DEV: full local stack (app + redis) =========================
 
 DEV_COMPOSE := docker-compose.yml
-DEV_PROJECT := sieve-dev
+DEV_PROJECT := sieve-hll-go-dev
 
 ## Build the app image for dev (compiles from source, uses build/Dockerfile)
 dev-build:
@@ -222,7 +222,7 @@ dev-logs:
 ## layer on top of .env.example -> .env for stage-only overrides.
 
 STAGE_COMPOSE := -f docker-compose.yml -f docker-compose.stage.yaml
-STAGE_PROJECT := sieve-stage
+STAGE_PROJECT := sieve-hll-go-stage
 
 ## Build the app image for stage (same Dockerfile as dev)
 stage-build:

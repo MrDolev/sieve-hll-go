@@ -1,4 +1,4 @@
-module github.com/mrdolev/sieve-go
+module github.com/mrdolev/sieve-hll-go
 
 go 1.24.1
 

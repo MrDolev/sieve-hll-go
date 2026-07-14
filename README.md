@@ -1,6 +1,6 @@
-# sieve-go
+# sieve-hll-go
 
-sieve-go is a lightweight, high-throughput Go service that receives client events from Sieve in real time. Requests are buffered in memory and processed in batches by a dedicated worker goroutine, which estimates unique IP cardinality using Redis HyperLogLog. The service exposes a simple HTTP API for querying aggregated results, with a focus on low latency and minimal Redis overhead.
+sieve-hll-go is a lightweight, high-throughput Go service that receives client events from Sieve in real time. Requests are buffered in memory and processed in batches by a dedicated worker goroutine, which estimates unique IP cardinality using Redis HyperLogLog. The service exposes a simple HTTP API for querying aggregated results, with a focus on low latency and minimal Redis overhead.
 
 ## Project goal
 
@@ -16,8 +16,8 @@ The primary goal of this project is to provide a performant backend component th
 1. Clone the repository:
 
 ```bash
-   git clone https://github.com/MrDolev/sieve-go.git
-   cd sieve-go
+   git clone https://github.com/MrDolev/sieve-hll-go.git
+   cd sieve-hll-go
 ```
 
 1. Create an environment file from the example if needed:
@@ -67,7 +67,7 @@ The project is a standard Go module. To build the binary locally:
 make bin
 ```
 
-This creates the app binary at `bin/sieve-go`.
+This creates the app binary at `bin/sieve-hll-go`.
 
 If you prefer to install dependencies and tools first, run:
 

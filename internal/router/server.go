@@ -3,7 +3,7 @@ package server
 import (
 	"net/http"
 
-	repoIPStats "github.com/mrdolev/sieve-go/internal/ip_stats"
+	repoIPStats "github.com/mrdolev/sieve-hll-go/internal/ip_stats"
 )
 
 type Router struct {

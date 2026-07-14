@@ -8,10 +8,10 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/mrdolev/sieve-go/internal/collector"
-	ip_stats "github.com/mrdolev/sieve-go/internal/ip_stats"
-	router "github.com/mrdolev/sieve-go/internal/router"
-	"github.com/mrdolev/sieve-go/internal/storage"
+	"github.com/mrdolev/sieve-hll-go/internal/collector"
+	ip_stats "github.com/mrdolev/sieve-hll-go/internal/ip_stats"
+	router "github.com/mrdolev/sieve-hll-go/internal/router"
+	"github.com/mrdolev/sieve-hll-go/internal/storage"
 	"github.com/redis/go-redis/v9"
 )
 
