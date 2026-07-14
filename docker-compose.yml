@@ -1,0 +1,60 @@
+# DEV environment: full local stack (app + redis).
+# Config loads .env.example first (defaults, always required), then
+# overlays .env on top if it exists (required: false = optional).
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: sieve-hll-go-redis
+    env_file:
+      - path: .env.example
+        required: true
+      - path: .env
+        required: false
+    # REDIS_PASSWORD may be empty (no auth) or set (auth required) --
+    # both cases work without needing separate compose files.
+    command: >
+      sh -c '
+      if [ -n "$$REDIS_PASSWORD" ]; then
+        exec redis-server --requirepass "$$REDIS_PASSWORD";
+      else
+        exec redis-server;
+      fi'
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: >
+        sh -c '
+        if [ -n "$$REDIS_PASSWORD" ]; then
+          redis-cli -a "$$REDIS_PASSWORD" ping;
+        else
+          redis-cli ping;
+        fi'
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - sieve-hll-go-net
+
+  app:
+    image: ${IMAGE_NAME:-sieve-hll-go}:${IMAGE_TAG:-latest}
+    build:
+      context: .
+      dockerfile: build/Dockerfile
+    container_name: sieve-hll-go-app
+    ports:
+      - "8081:8081"
+    env_file:
+      - path: .env.example
+        required: true
+      - path: .env
+        required: false
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - sieve-hll-go-net
+
+networks:
+  sieve-hll-go-net:
+    name: sieve-hll-go-net
+    driver: bridge

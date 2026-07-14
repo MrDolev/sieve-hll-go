@@ -1,0 +1,46 @@
+# INTEGRATION environment: Redis + optional containerized test runner.
+services:
+  redis-test:
+    image: redis:7-alpine
+    container_name: sieve-hll-go-redis-test
+    ports:
+      - "6380:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 3s
+      timeout: 2s
+      retries: 10
+    networks:
+      - sieve-hll-go-test-net
+
+  # Optional: run integration tests inside a container (no local Go toolchain needed).
+  # Usage: make integration-test-container
+  test-runner:
+    image: golang:1.23-alpine
+    working_dir: /src
+    volumes:
+      - .:/src
+      - go-mod-cache:/go/pkg/mod
+    env_file:
+      - path: .env.example
+        required: true
+      - path: .env
+        required: false
+    environment:
+      # Forced overrides: this container must talk to redis-test on the
+      # compose network, not whatever REDIS_ADDR is set to in .env/.env.example.
+      REDIS_ADDR: redis-test:6379
+      CGO_ENABLED: "0"
+    command: go test -tags=integration -v ./test/integration/...
+    depends_on:
+      redis-test:
+        condition: service_healthy
+    networks:
+      - sieve-hll-go-test-net
+
+networks:
+  sieve-hll-go-test-net:
+    driver: bridge
+
+volumes:
+  go-mod-cache:

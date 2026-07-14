@@ -1,0 +1,52 @@
+# Real multi-client emulation: each service below is its own container on
+# the "sieve-hll-go-net" network, so each gets a genuinely distinct Docker bridge
+# IP (not spoofed). Requires the app stack to already be up:
+#
+#   make docker-up
+#   docker compose -f docker-compose.clients.yml up --build
+#
+# Add/remove client-N blocks, or use `docker compose ... up --scale
+# client=5` with a single templated service if you want a variable count
+# instead of hand-listing clients.
+
+services:
+  client-1:
+    build:
+      context: ./scripts/client
+    environment:
+      TARGET_URL: http://app:8081
+      N_MIN: "10"
+      N_MAX: "100"
+      REQUEST_COUNT: "30"
+      DELAY_MS: "200"
+    networks:
+      - sieve-hll-go-net
+
+  client-2:
+    build:
+      context: ./scripts/client
+    environment:
+      TARGET_URL: http://app:8081
+      N_MIN: "500"
+      N_MAX: "2000"
+      REQUEST_COUNT: "15"
+      DELAY_MS: "500"
+    networks:
+      - sieve-hll-go-net
+
+  client-3:
+    build:
+      context: ./scripts/client
+    environment:
+      TARGET_URL: http://app:8081
+      N_MIN: "10"
+      N_MAX: "100"
+      REQUEST_COUNT: "50"
+      DELAY_MS: "50"
+    networks:
+      - sieve-hll-go-net
+
+networks:
+  sieve-hll-go-net:
+    external: true
+    name: sieve-hll-go-net
