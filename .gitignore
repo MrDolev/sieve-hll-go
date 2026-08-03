@@ -86,7 +86,7 @@ go.work
 .zed/*
 
 ### Binary file ###
-bin/sieve-go
+bin/sieve-hll-go
 
 ### Opencode ###
 .opencode/**
