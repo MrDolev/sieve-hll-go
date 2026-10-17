@@ -90,3 +90,6 @@ bin/sieve-hll-go
 
 ### Opencode ###
 .opencode/**
+
+### Claude Code ###
+.mcp.json
