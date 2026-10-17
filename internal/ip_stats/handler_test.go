@@ -19,12 +19,15 @@ func TestIPStatsHandlerCollect(t *testing.T) {
 		headers    map[string]string
 		wantIP     string
 		statusCode int
+		filter     bool
+		invalid    bool
 	}{
 		{
 			name:       "uses real ip header",
 			headers:    map[string]string{utils.REAL_IP: handlerIP},
 			wantIP:     handlerIP,
 			statusCode: http.StatusOK,
+			filter:     false,
 		},
 		{
 			name: "prefers forwarded for header",
@@ -34,6 +37,20 @@ func TestIPStatsHandlerCollect(t *testing.T) {
 			},
 			wantIP:     "10.0.0.1",
 			statusCode: http.StatusOK,
+			filter:     false,
+		},
+		{
+			name:       "skip filtered ip",
+			headers:    map[string]string{utils.REAL_IP: handlerIP},
+			wantIP:     handlerIP,
+			statusCode: http.StatusNoContent,
+			filter:     true,
+		},
+		{
+			name:       "rejects invalid ip",
+			headers:    map[string]string{utils.REAL_IP: "not-an-ip"},
+			statusCode: http.StatusBadRequest,
+			invalid:    true,
 		},
 	}
 
@@ -43,13 +60,21 @@ func TestIPStatsHandlerCollect(t *testing.T) {
 			defer controller.Finish()
 
 			ipStatsService := mocks.NewMockIPStatsServiceI(controller)
+			netFilter := mocks.NewMockNetFilterI(controller)
 
 			request := httptest.NewRequest(http.MethodGet, "http://example.com", nil)
 			for key, value := range tt.headers {
 				request.Header.Set(key, value)
 			}
 
-			ipStatsService.EXPECT().Collect(request.Context(), tt.wantIP).Times(1)
+			if !tt.invalid {
+				netFilter.EXPECT().Filter(tt.wantIP).Return(tt.filter).Times(1)
+				ipStatsService.EXPECT().GetFilter().Return(netFilter).Times(1)
+			}
+
+			if !tt.invalid && !tt.filter {
+				ipStatsService.EXPECT().Collect(request.Context(), tt.wantIP).Times(1)
+			}
 
 			handler := ipstats.NewHandler(ipStatsService)
 			responseWriter := httptest.NewRecorder()

@@ -13,6 +13,7 @@ import (
 	context "context"
 	reflect "reflect"
 
+	netfilter "github.com/mrdolev/sieve-hll-go/internal/net_filter"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -50,4 +51,18 @@ func (m *MockIPStatsServiceI) Collect(ctx context.Context, ip string) {
 func (mr *MockIPStatsServiceIMockRecorder) Collect(ctx, ip any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Collect", reflect.TypeOf((*MockIPStatsServiceI)(nil).Collect), ctx, ip)
+}
+
+// GetFilter mocks base method.
+func (m *MockIPStatsServiceI) GetFilter() netfilter.NetFilterI {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetFilter")
+	ret0, _ := ret[0].(netfilter.NetFilterI)
+	return ret0
+}
+
+// GetFilter indicates an expected call of GetFilter.
+func (mr *MockIPStatsServiceIMockRecorder) GetFilter() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFilter", reflect.TypeOf((*MockIPStatsServiceI)(nil).GetFilter))
 }
