@@ -39,6 +39,49 @@ The application reads runtime configuration from a `.env` file (created with `ma
 - `REDIS_PROTOCOL` (default: `2`) — Protocol/client settings used by the Redis client (kept as provided).
 - `SERVER_PORT` (default: `8081`) — TCP port the HTTP server listens on.
 - `SERVER_PATH` (default: `/`) — Base HTTP path prefix for the server endpoints.
+- `TRUSTED_PROXIES` (default: empty) — Reverse proxies / load balancers allowed to set `X-Forwarded-For` and `X-Real-IP`. See [Trusted proxies](#trusted-proxies).
+
+### Trusted proxies
+
+`TRUSTED_PROXIES` is the allowlist of proxies whose forwarded headers can be trusted to carry the real client IP. Requests coming from any other address are meant to be attributed to their TCP source address, so a client cannot spoof or inflate the unique-IP count by sending its own `X-Forwarded-For` (issue #8).
+
+> **Status:** the variable is parsed and validated at startup, but not enforced yet — forwarded headers are still read from every client until the header check lands in `utils.GetIPAddress`.
+
+Startup log:
+
+```text
+trusted proxies: [10.0.0.0/8 127.0.0.1/32 ::1/128]     # or "trusted proxies: none" when empty
+warning: TRUSTED_PROXIES is not enforced yet, X-Forwarded-For / X-Real-IP are still read from every client
+```
+
+On an invalid value the app exits with:
+
+```text
+error to parse configuration: TRUSTED_PROXIES: invalid CIDR "proxy.local": ...
+error to parse configuration: TRUSTED_PROXIES: "0.0.0.0/0" would trust every client, list the proxy addresses instead
+```
+
+Format:
+
+- Comma-separated list; spaces and empty entries are ignored.
+- CIDR notation (`10.0.0.0/8`, `2001:db8::/32`) or single addresses (`10.0.0.1` → `/32`, `::1` → `/128`).
+- Empty (the default) trusts no proxy.
+- The app refuses to start on an invalid entry (e.g. `proxy.local`, `10.0.*.*`) and on catch-all prefixes (`0.0.0.0/0`, `::/0`), since trusting every address is the unconditional trust this setting exists to prevent.
+
+Examples:
+
+```env
+# Production behind a load balancer on a private subnet
+TRUSTED_PROXIES=10.0.0.0/8
+
+# Local development: binary on the host (load_test.sh from the same machine)
+TRUSTED_PROXIES=127.0.0.1,::1
+
+# Local development: app in Docker Desktop, requests from the host
+TRUSTED_PROXIES=192.168.65.1
+```
+
+The development values only make sense on a local machine; `192.168.65.1` is the Docker Desktop host gateway. Do not use them in production.
 
 Example `.env` for a local run:
 
