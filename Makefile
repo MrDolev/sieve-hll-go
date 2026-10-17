@@ -36,7 +36,7 @@ LOAD_ENV = set -a; \
         integration-up integration-down integration-test integration-test-container \
         dev-build dev-up dev-down dev-logs compose-build compose-up compose-down compose-logs compose-redis-cli compose-load-test compose-deploy \
         stage-build stage-up stage-down stage-logs stage-redis-cli stage-load-test \
-        clients-up clients-down load-test
+        clients-up clients-down load-test cidr-test
 
 all: validate build
 
@@ -254,8 +254,19 @@ stage-load-test:
 ## Works against ANY running instance, containerized or not -- pass the URL:
 ##   ./scripts/load_test.sh http://localhost:8081   (dev container or local-run)
 ##   ./scripts/load_test.sh http://localhost:8082   (stage container)
+## Pick the fake client IP ranges with IP_CIDR to see which ones CIDR filters:
+##   IP_CIDR=192.168.1.0/24,8.8.8.0/24 make load-test
 load-test:
 	./scripts/load_test.sh http://localhost:8081
+
+## End-to-end check of the CIDR filter against a running instance
+## (`make local-run` or `make compose-up` first). Expectations come from the
+## same CIDR value the app loads from .env.example/.env -- restart the app
+## after changing it. Override the target with CIDR_TEST_URL=...
+CIDR_TEST_URL ?= http://localhost:8081
+
+cidr-test:
+	@$(LOAD_ENV) ./scripts/cidr_test.sh $(CIDR_TEST_URL)
 
 ## Real multi-container clients with distinct Docker network IPs
 ## (requires `make dev-up` first)
